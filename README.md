@@ -9,27 +9,32 @@ This program is the core of an iterative DBG genome assembler, so except the mai
 
 Karect[3] as an Error corrector to preprocess the input sequences. For better quality, it's recommended using an error corrector before running the program.
 
-BWA[4] as a Sequence Aligner to align the output contigs with the input data at each iteration. 
+BWA[4] as a Sequence Aligner to align the output contigs with the input data at each iteration. It'll be installed by the dependecies package. 
 
 BBmap[5] as an Aligner to remove similar and containment contigs. Please download BBmap and put it in this path: DRMI-Pyspark/tools/bbmap/
 
 SGA[6] as a string graph-based sequence assembler to use in the last iteration of the assembly. Please download and install from [here](https://github.com/jts/sga).
 
-Quast[7] as a quality assessment tool to evaluate the final output of the assembly.
+Quast[7] as a quality assessment tool to evaluate the final output of the assembly. It'll be installed by the dependecies package.
 
 
-## Installation Guide
-
-
-### Packaging project Dependencies
-The libraries used in the script are lised in requirements.txt. To install them follow the instruction:
+# Packaging project Dependencies
+The libraries that are used in the program are lised in requirements.txt. To install them follow the instruction:
 ```
 pip install -r requirements.txt --target=dependencies
 cd dependencies
 zip -r dependencies.zip *
 mv dependencies.zip ../ 
 ```
-Datasets were retrieved from the following[2]: 
+
+## Run command
+```
+spark-submit --verbose --deploy-mode client --driver-memory [x] --total-executor-cores [x] --executor-memory [x] --executor-cores [x] --py-files dependencies.zip Distributed_RMI_v4.py --kmin 20 --kmax 91 --step 10 -c [cut filter] --dsname [Data Set] --ref [ref file path] --inputdir [input dir path] --workers [number of workers] --giraph_jarfile=DBG-Giraph_26.jar --bwa_threads [number of thresds]
+```
+
+All required files including the jar file of Giraph code are located in DRMI-Pyspark folder. The java source code of the related jar file is in DRMI-Giraph folder.
+
+Datasets can be retrieved from the following[2]: 
 http://bix.ucsd.edu/singlecell/
 
 

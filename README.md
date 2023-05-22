@@ -18,7 +18,7 @@ SGA[6] as a string graph-based sequence assembler to use in the last iteration o
 Quast[7] as a quality assessment tool to evaluate the final output of the assembly. It'll be installed by the dependecies package.
 
 
-# Packaging project Dependencies
+## Packaging project Dependencies
 The libraries that are used in the program are lised in requirements.txt. To install them follow the instruction:
 ```
 pip install -r requirements.txt --target=dependencies
@@ -31,7 +31,7 @@ mv dependencies.zip ../
 ```
 spark-submit --deploy-mode client --driver-memory [x] --total-executor-cores [x] --executor-memory [x] --executor-cores [x] --py-files dependencies.zip Distributed_RMI_v4.py --kmin 20 --kmax 91 --step 10 -c [cut filter] --dsname [Data Set] --ref [ref file path] --inputdir [input dir path] --workers [number of workers] --giraph_jarfile=DBG-Giraph_26.jar --bwa_threads [number of thresds]
 ```
-
+The program 
 All required files including the jar file of Giraph code are located in DRMI-Pyspark folder. The java source code of the related jar file is in DRMI-Giraph folder.
 
 

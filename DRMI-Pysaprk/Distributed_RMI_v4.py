@@ -599,7 +599,7 @@ def main(inp_file1: str, inp_file2: str):
         cmd = f"hdfs dfs -getmerge {giraph_output}/p* {bbmap_input}"
         run_cmd(cmd, "copy from hdfs", False)
 
-        cmd = f"tools/bbmap/dedupe.sh in={bbmap_input} out={bbmap_output}"
+        cmd = f"dedupe.sh in={bbmap_input} out={bbmap_output}"
         run_cmd(cmd, "bbmap", False)
 
         #
@@ -729,9 +729,9 @@ def sga_quast(file1, file2, data_dir, refGenFileAddress, in_f1, in_f2):
     os.system(strCommand)
     assembledfile = "assembled-contigs.fa"
     if refGenFileAddress == "null":
-        strCommand = f"~/tools/quast/quast.py {data_dir}/contigs/assembled-contigs.fa -1 {in_f1} -2 {in_f2} -o {data_dir}/QuastResult -m 500"
+        strCommand = f"quast.py {data_dir}/contigs/assembled-contigs.fa -1 {in_f1} -2 {in_f2} -o {data_dir}/QuastResult -m 500"
     else:
-        strCommand = "~/tools/quast/quast.py " + data_dir + "/contigs/* -r " + refGenFileAddress + " -o " + data_dir + "/QuastResult -m 500"
+        strCommand = "quast.py " + data_dir + "/contigs/* -r " + refGenFileAddress + " -o " + data_dir + "/QuastResult -m 500"
         run_cmd(strCommand, "Quast", False)
     return (sgadirname + "/" + assembledfile)
 

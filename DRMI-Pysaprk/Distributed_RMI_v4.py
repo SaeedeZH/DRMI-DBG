@@ -721,31 +721,6 @@ def genome_asembly(inp_file1: str, inp_file2: str):
         print(f"loop count {loop_count} time duration: {loop_time}")
         log_str += f"\t{loop_time}\n"
 
-kmin: int = 0
-kmax: int = 0
-kstep: int = 0
-k_list: list = []
-
-workers_num: int = 0
-
-cut_filter_list = []
-
-bwa_threads = 0
-
-giraph_jarfile = ""
-sparkbwa_jarfile = ""
-
-ref_file = ""
-dsname = ""
-input_dir = ""
-output_dir = ""
-input_contigs = ""
-karect_output = ""
-output_dbg = ""
-output_graph = ""
-
-log_str = ""
-
 def main():
     global kmin, kmax, kstep, k_list, output_dir, log_str
     
@@ -793,6 +768,31 @@ def main():
     cmp_file = open(output_dir + "/" + dsname + "_" + output_dir.split("_")[1] + "_" + output_dir.split("_")[2] + "_CompareFile.tsv", "w")
     cmp_file.write(log_str)
     cmp_file.close()
+
+kmin: int = 0
+kmax: int = 0
+kstep: int = 0
+k_list: list = []
+
+workers_num: int = 0
+
+cut_filter_list = []
+
+bwa_threads = 0
+
+giraph_jarfile = ""
+sparkbwa_jarfile = ""
+
+ref_file = ""
+dsname = ""
+input_dir = ""
+output_dir = ""
+input_contigs = ""
+karect_output = ""
+output_dbg = ""
+output_graph = ""
+
+log_str = ""
 
 if __name__ == '__main__':
     main()

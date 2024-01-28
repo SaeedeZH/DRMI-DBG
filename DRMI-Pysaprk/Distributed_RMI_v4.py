@@ -24,14 +24,12 @@ class CreateGraph:
         self.input_contigs = input_contigs
         # self.log_str = log
 
-
     def time_duration(self, start: datetime, jname: str, log: bool = False):
         global log_str
         duration = datetime.now() - start
         print(f"@:: '{jname}' command time duration: {duration}\n")
         if log:
             log_str += f"\t{duration}"
-
 
     def create_dbg(self, loop_count: int, max_loop_count: int, input_dir: str, bwa_output_list: list,
                    remain_reads: str, cut_filter: int):
@@ -402,7 +400,6 @@ def run_cmd(cmd: str, jname: str, log: bool):
         print("!" * 50)
         sys.exit(2)
 
-
 def get_args(argv):
     global input_file1, input_file2, input_dir, dsname, ref_file, kmin, kmax, kstep, cut_filter_list\
         , workers_num, giraph_jarfile, sparkbwa_jarfile, bwa_threads, k_list
@@ -473,7 +470,6 @@ def correction_with_karect():
 
     return karect_output_dir
 
-
 def set_cut_filter(loop_cnt: int, filter_list: list, k_list: list):
     """
     define cut_filter base on counter of loop
@@ -494,7 +490,6 @@ def set_cut_filter(loop_cnt: int, filter_list: list, k_list: list):
 
     return int(cut_filter)
 
-
 def set_k_list(start: int, end: int, step: int):
     """
         create list of k_values
@@ -504,7 +499,6 @@ def set_k_list(start: int, end: int, step: int):
     for i in range(end, start, -step):
         k_list.append(i)
     print(k_list)
-
 
 def start_spark(conf):
     """
@@ -518,8 +512,57 @@ def start_spark(conf):
     # sc._conf.get('spark.driver.memory')
     return sc, spark
 
+def sga_quast(file1, file2, data_dir, refGenFileAddress, in_f1, in_f2):
+    m = 0
 
-def main(inp_file1: str, inp_file2: str):
+    sgadirname = data_dir
+    if not os.path.exists(sgadirname):
+        os.mkdir(sgadirname)
+    outputfile = "last-graph.fasta"
+    handle1 = open(file1)
+    handle2 = open(file2)
+    output_handle = open(sgadirname +"/"+ outputfile, "w")
+    cnt_file1 = 0
+    cnt_file2 = 0
+    for seq_record in SeqIO.parse(handle1, "fasta"):
+        # seq1 = seq_record.seq
+        SeqIO.write(SeqRecord(seq_record.seq, id=str(m)), output_handle, "fasta")
+        cnt_file1 += 1
+        m += 1
+    for seq_record in SeqIO.parse(handle2, "fasta"):
+        SeqIO.write(SeqRecord(seq_record.seq, id=str(m)), output_handle, "fasta")
+        cnt_file2 += 1
+        m += 1
+    print('cnt_file1', cnt_file1)
+    print('cnt_file2', cnt_file2)
+    output_handle.close()
+    handle1.close()
+    handle2.close()
+
+    str_precommand = "cd " + sgadirname + " \r\n"
+    strCommand = str_precommand + " sga index -t 4 " + outputfile
+    print(strCommand)
+    os.system(strCommand)
+    rmdupfile = outputfile.split('.')[0] + "_rmdup.fa"
+    strCommand = str_precommand + " sga rmdup " + outputfile + " -o " + rmdupfile
+    print(strCommand)
+    os.system(strCommand)
+    strCommand = str_precommand + " sga overlap -m 20 -t 4 " + rmdupfile
+    run_cmd(strCommand, "sga overlap", False)
+    strCommand = str_precommand + " sga assemble " + rmdupfile.split('.')[0] + ".asqg.gz -o assembled"
+    run_cmd(strCommand, "sga assemble", False)
+    strCommand = f"cp  {sgadirname}/assembled-contigs.fa {sgadirname}/contigs"
+    print(strCommand)
+    os.system(strCommand)
+    assembledfile = "assembled-contigs.fa"
+    if refGenFileAddress == "null":
+        strCommand = f"quast.py {data_dir}/contigs/assembled-contigs.fa -1 {in_f1} -2 {in_f2} -o {data_dir}/QuastResult -m 500"
+    else:
+        strCommand = "quast.py " + data_dir + "/contigs/* -r " + refGenFileAddress + " -o " + data_dir + "/QuastResult -m 500"
+        run_cmd(strCommand, "Quast", False)
+    return (sgadirname + "/" + assembledfile)
+
+def genome_asembly(inp_file1: str, inp_file2: str):
     """
 
     """
@@ -625,12 +668,6 @@ def main(inp_file1: str, inp_file2: str):
             cmd = f"bwa index {bbmap_output}"
             run_cmd(cmd, "bwa index", False)
 
-            # for i in range(1, 4, 1):
-            #     cmd = f"scp -r {os.path.dirname(bbmap_output)} slave{i}:/tmp/"
-            #     run_cmd(cmd, f"scp index to slave{i}")
-
-            # bwa_output_file = "bwa_output.sam"
-            # bwa_output_on_fs = f"{dir_path_on_fs}/{bwa_output_file}"
             if loop_count == 1:
                 cmd = f"bwa mem -T 0 -t {bwa_threads} {bbmap_output} {inp_file1} {inp_file2}"
             else:
@@ -684,58 +721,6 @@ def main(inp_file1: str, inp_file2: str):
         print(f"loop count {loop_count} time duration: {loop_time}")
         log_str += f"\t{loop_time}\n"
 
-
-def sga_quast(file1, file2, data_dir, refGenFileAddress, in_f1, in_f2):
-    m = 0
-
-    sgadirname = data_dir
-    if not os.path.exists(sgadirname):
-        os.mkdir(sgadirname)
-    outputfile = "last-graph.fasta"
-    handle1 = open(file1)
-    handle2 = open(file2)
-    output_handle = open(sgadirname +"/"+ outputfile, "w")
-    cnt_file1 = 0
-    cnt_file2 = 0
-    for seq_record in SeqIO.parse(handle1, "fasta"):
-        # seq1 = seq_record.seq
-        SeqIO.write(SeqRecord(seq_record.seq, id=str(m)), output_handle, "fasta")
-        cnt_file1 += 1
-        m += 1
-    for seq_record in SeqIO.parse(handle2, "fasta"):
-        SeqIO.write(SeqRecord(seq_record.seq, id=str(m)), output_handle, "fasta")
-        cnt_file2 += 1
-        m += 1
-    print('cnt_file1', cnt_file1)
-    print('cnt_file2', cnt_file2)
-    output_handle.close()
-    handle1.close()
-    handle2.close()
-
-    str_precommand = "cd " + sgadirname + " \r\n"
-    strCommand = str_precommand + " sga index -t 4 " + outputfile
-    print(strCommand)
-    os.system(strCommand)
-    rmdupfile = outputfile.split('.')[0] + "_rmdup.fa"
-    strCommand = str_precommand + " sga rmdup " + outputfile + " -o " + rmdupfile
-    print(strCommand)
-    os.system(strCommand)
-    strCommand = str_precommand + " sga overlap -m 20 -t 4 " + rmdupfile
-    run_cmd(strCommand, "sga overlap", False)
-    strCommand = str_precommand + " sga assemble " + rmdupfile.split('.')[0] + ".asqg.gz -o assembled"
-    run_cmd(strCommand, "sga assemble", False)
-    strCommand = f"cp  {sgadirname}/assembled-contigs.fa {sgadirname}/contigs"
-    print(strCommand)
-    os.system(strCommand)
-    assembledfile = "assembled-contigs.fa"
-    if refGenFileAddress == "null":
-        strCommand = f"quast.py {data_dir}/contigs/assembled-contigs.fa -1 {in_f1} -2 {in_f2} -o {data_dir}/QuastResult -m 500"
-    else:
-        strCommand = "quast.py " + data_dir + "/contigs/* -r " + refGenFileAddress + " -o " + data_dir + "/QuastResult -m 500"
-        run_cmd(strCommand, "Quast", False)
-    return (sgadirname + "/" + assembledfile)
-
-
 kmin: int = 0
 kmax: int = 0
 kstep: int = 0
@@ -761,8 +746,9 @@ output_graph = ""
 
 log_str = ""
 
-
-if __name__ == '__main__':
+def main():
+    global kmin, kmax, kstep, k_list, output_dir, log_str
+    
     start_time_total = datetime.now()
 
     get_args(sys.argv[1:])
@@ -784,7 +770,7 @@ if __name__ == '__main__':
     log_str += f"\t{input_file1}\t{input_file2}\n"
     log_str += f"\t{k_list}\t{cut_filter_list}\n"
 
-    main(input_file1, input_file2)
+    genome_asembly(input_file1, input_file2)
 
     print("="*50)
 
@@ -807,3 +793,6 @@ if __name__ == '__main__':
     cmp_file = open(output_dir + "/" + dsname + "_" + output_dir.split("_")[1] + "_" + output_dir.split("_")[2] + "_CompareFile.tsv", "w")
     cmp_file.write(log_str)
     cmp_file.close()
+
+if __name__ == '__main__':
+    main()
